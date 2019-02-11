@@ -50,7 +50,7 @@ def preprocess(tweets):
 	tweets.text = tweets.text.apply(lambda x: re.sub(u'(\s)@\w+', u'', x))
 
 	# removing hashtags
-	tweets.text = tweets.text.apply(lambda x: re.sub(u'#', u'', x))
+	tweets.text = tweets.text.apply(lambda x: re.sub(u'#\S+', u'', x))
 
 	# tokenize
 	data_words = list(tweet_to_words(tweets.text))
@@ -59,7 +59,7 @@ def preprocess(tweets):
 	print(tweets.head())
 
 	# Build the bigram and trigram models
-	bigram = gensim.models.Phrases(data_words, min_count=5, threshold=75) # higher threshold fewer phrases.
+	bigram = gensim.models.Phrases(data_words, min_count=5, threshold=50) # higher threshold fewer phrases.
 	trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
 
 	# Faster way to get a sentence clubbed as a trigram/bigram
@@ -132,21 +132,33 @@ def lda(data_lemmatized):
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=20, 
+                                           num_topics=8, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
                                            passes=10,
                                            alpha='auto',
                                            per_word_topics=True)
+
+	pprint(lda_model.print_topics())
+	doc_lda = lda_model[corpus]
+	# Compute Perplexity
+	print('\nPerplexity: ', lda_model.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
+
 	# Compute Coherence Score
 	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
 	coherence_lda = coherence_model_lda.get_coherence()
 	print('\nCoherence Score: ', coherence_lda)
-	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=6)
+	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=30, step=6)
+
+	mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
+	ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
+	coherence_model_ldamallet = CoherenceModel(model=ldamallet, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+	coherence_ldamallet = coherence_model_ldamallet.get_coherence()
+	print('\nCoherence Score: ', coherence_ldamallet)
 
 	# Show graph
-	limit=40; start=2; step=6;
+	limit=30; start=2; step=6;
 	x = range(start, limit, step)
 	plt.plot(x, coherence_values)
 	plt.xlabel("Num Topics")
