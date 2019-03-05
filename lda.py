@@ -149,16 +149,18 @@ def lda(data_lemmatized):
 	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
 	coherence_lda = coherence_model_lda.get_coherence()
 	print('\nCoherence Score: ', coherence_lda)
-	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=30, step=6)
 
-	mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
-	ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
-	coherence_model_ldamallet = CoherenceModel(model=ldamallet, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
-	coherence_ldamallet = coherence_model_ldamallet.get_coherence()
-	print('\nCoherence Score: ', coherence_ldamallet)
+
+	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=15, step=3)
+
+	# mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
+	# ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
+	# coherence_model_ldamallet = CoherenceModel(model=ldamallet, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+	# coherence_ldamallet = coherence_model_ldamallet.get_coherence()
+	# print('\nCoherence Score: ', coherence_ldamallet)
 
 	# Show graph
-	limit=30; start=2; step=6;
+	limit=15; start=2; step=3;
 	x = range(start, limit, step)
 	plt.plot(x, coherence_values)
 	plt.xlabel("Num Topics")
@@ -167,10 +169,10 @@ def lda(data_lemmatized):
 	plt.show()
 
 	# Print the coherence scores
-	for m, cv in zip(x, coherence_values):
-		print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
+	# for m, cv in zip(x, coherence_values):
+	# 	print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
 
-def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
+def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, step=3):
     """
     Compute c_v coherence for various number of topics
 
@@ -191,10 +193,27 @@ def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
     coherence_values = []
     model_list = []
     for num_topics in range(start, limit, step):
-        model = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=num_topics, id2word=id2word)
+    	# for mallet
+        # model = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=num_topics, id2word=id2word)
+        # model_list.append(model)
+        # coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+        # coherence_values.append(coherencemodel.get_coherence())
+
+        # lda
+        model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                           id2word=id2word,
+                                           num_topics=num_topics, 
+                                           random_state=100,
+                                           update_every=1,
+                                           chunksize=100,
+                                           passes=10,
+                                           alpha='auto',
+                                           per_word_topics=True)
         model_list.append(model)
-        coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
-        coherence_values.append(coherencemodel.get_coherence())
+        coherence_model_lda = CoherenceModel(model, texts=texts, dictionary=id2word, coherence='c_v')
+        coherence_lda = coherence_model_lda.get_coherence()
+        coherence_values.append(coherence_lda)
+
 
     return model_list, coherence_values
 
