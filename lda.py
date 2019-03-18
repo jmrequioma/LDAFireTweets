@@ -31,7 +31,7 @@ import warnings
 warnings.filterwarnings("ignore",category=DeprecationWarning)
 
 def import_dataset():
-	tweets = pd.read_csv('compiled.csv', sep=';', encoding = 'ISO-8859-1')
+	tweets = pd.read_csv('pasil.csv', sep=';', encoding = 'ISO-8859-1')
 	print(tweets.head())
 	return tweets
 
@@ -59,7 +59,7 @@ def preprocess(tweets):
 	print(tweets.head())
 
 	# Build the bigram and trigram models
-	bigram = gensim.models.Phrases(data_words, min_count=5, threshold=50) # higher threshold fewer phrases.
+	bigram = gensim.models.Phrases(data_words, min_count=3, threshold=30) # higher threshold fewer phrases.
 	trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
 
 	# Faster way to get a sentence clubbed as a trigram/bigram
@@ -132,7 +132,7 @@ def lda(data_lemmatized):
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=8, 
+                                           num_topics=5, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
