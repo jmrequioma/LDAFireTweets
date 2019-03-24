@@ -5,6 +5,7 @@ from pprint import pprint
 from pprint import pprint
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
+from collections import Counter
 
 # Gensim
 import gensim
@@ -19,9 +20,11 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # parser = English() 
 
 # Plotting tools
-import pyLDAvis
-import pyLDAvis.gensim
+# import pyLDAvis
+# import pyLDAvis.gensim
+# pyLDAvis.enable_notebook()
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 # Enable logging for gensim
 import logging
@@ -29,6 +32,9 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 import warnings
 warnings.filterwarnings("ignore",category=DeprecationWarning)
+
+from tkinter import *
+from tkinter.ttk import *
 
 def import_dataset():
 	tweets = pd.read_csv('pasil.csv', sep=';', encoding = 'ISO-8859-1')
@@ -132,7 +138,7 @@ def lda(data_lemmatized):
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=5, 
+                                           num_topics=6, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -160,19 +166,67 @@ def lda(data_lemmatized):
 	# print('\nCoherence Score: ', coherence_ldamallet)
 
 	# Show graph
-	limit=15; start=2; step=3;
+	limit=1000; start=2; step=1;
 	x = range(start, limit, step)
-	plt.plot(x, coherence_values)
-	plt.xlabel("Num Topics")
-	plt.ylabel("Coherence score")
-	plt.legend(("coherence_values"), loc='best')
+	# plt.plot(x, coherence_values)
+	# plt.xlabel("Num Topics")
+	# plt.ylabel("Coherence score")
+	# plt.legend(("coherence_values"), loc='best')
+	# plt.show()
+	count = 0
+	temp = 0
+	# Print the coherence scores
+	for m, cv in zip(x, coherence_values):
+		if (count == 0):
+			temp = round(cv, 4)
+		else:
+			# count > 0
+			if (round(cv, 4) < temp):
+				ideal_num_topics = m
+				print(ideal_num_topics)
+				break
+			else:
+				temp = round(cv, 4)
+		count = count + 1
+
+	half_of_topics = 0
+	if (ideal_num_topics % 2 == 0):
+		half_of_topics = int(ideal_num_topics / 2)
+	else:
+		half_of_topics = int((ideal_num_topics - 1) / 2)
+
+	topics = lda_model.show_topics(formatted=False)
+	data_flat = [w for w_list in texts for w in w_list]
+	counter = Counter(data_flat)
+
+	out = []
+	for i, topic in topics:
+	    for word, weight in topic:
+	        out.append([word, i , weight, counter[word]])
+
+	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])        
+
+	# Plot Word Count and Weights of Topic Keywords
+	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
+	for i, ax in enumerate(axes.flatten()):
+	    ax.bar(x='word', height="word_count", data=df.loc[df.topic_id==i, :], color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+	    ax_twin = ax.twinx()
+	    ax_twin.bar(x='word', height="importance", data=df.loc[df.topic_id==i, :], color=cols[i], width=0.2, label='Weights')
+	    ax.set_ylabel('Word Count', color=cols[i])
+	    ax_twin.set_ylim(0, 0.1); ax.set_ylim(0, 3500)
+	    ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+	    ax.tick_params(axis='y', left=False)
+	    ax.set_xticklabels(df.loc[df.topic_id==i, 'word'], rotation=30, horizontalalignment= 'right')
+	    ax.legend(loc='upper left'); ax_twin.legend(loc='upper right')
+
+	fig.tight_layout(w_pad=2)    
+	fig.suptitle('Word Count and Importance of Topic Keywords', fontsize=22, y=1.05)    
 	plt.show()
 
-	# Print the coherence scores
-	# for m, cv in zip(x, coherence_values):
-	# 	print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
+	# find for best coherence value score
 
-def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, step=3):
+def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, step=1):
     """
     Compute c_v coherence for various number of topics
 
@@ -218,9 +272,17 @@ def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, s
     return model_list, coherence_values
 
 def main():
+	window = Tk()
+	window.resizable(False, False)
+	window.title("FireTalk Tweet Visualizer")
+	window.geometry('600x500')
 	tweets = import_dataset()
 	data_lemmatized = preprocess(tweets)
-	lda(data_lemmatized)
+	btn = Button(window, text="Visualize", command= lambda: lda(data_lemmatized))
+
+	# btn.bind("<Button-1>", buttonClickLDA(data_lemmatized))
+	btn.place(relx=0.5, rely=0.5, anchor=CENTER)
+	window.mainloop()
 
 if __name__ == '__main__':
 	main()
