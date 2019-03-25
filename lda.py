@@ -23,7 +23,9 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # import pyLDAvis
 # import pyLDAvis.gensim
 # pyLDAvis.enable_notebook()
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 
 # Enable logging for gensim
@@ -138,7 +140,7 @@ def lda(data_lemmatized):
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=6, 
+                                           num_topics=15, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -195,6 +197,17 @@ def lda(data_lemmatized):
 	else:
 		half_of_topics = int((ideal_num_topics - 1) / 2)
 
+	# feed the lda model with ideal number of topics 
+	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                           id2word=id2word,
+                                           num_topics=ideal_num_topics, 
+                                           random_state=100,
+                                           update_every=1,
+                                           chunksize=100,
+                                           passes=10,
+                                           alpha='auto',
+                                           per_word_topics=True)
+
 	topics = lda_model.show_topics(formatted=False)
 	data_flat = [w for w_list in texts for w in w_list]
 	counter = Counter(data_flat)
@@ -221,7 +234,7 @@ def lda(data_lemmatized):
 	    ax.legend(loc='upper left'); ax_twin.legend(loc='upper right')
 
 	fig.tight_layout(w_pad=2)    
-	fig.suptitle('Word Count and Importance of Topic Keywords', fontsize=22, y=1.05)    
+	fig.suptitle('Word Count and Importance of Topic Keywords')    
 	plt.show()
 
 	# find for best coherence value score
@@ -273,14 +286,17 @@ def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, s
 
 def main():
 	window = Tk()
+	window.configure(background='lightgray')
 	window.resizable(False, False)
 	window.title("FireTalk Tweet Visualizer")
 	window.geometry('600x500')
+	photo = PhotoImage(file="fire2.png")
+	label = Label(window, image=photo)
 	tweets = import_dataset()
 	data_lemmatized = preprocess(tweets)
 	btn = Button(window, text="Visualize", command= lambda: lda(data_lemmatized))
 
-	# btn.bind("<Button-1>", buttonClickLDA(data_lemmatized))
+	label.place(anchor=CENTER)
 	btn.place(relx=0.5, rely=0.5, anchor=CENTER)
 	window.mainloop()
 
