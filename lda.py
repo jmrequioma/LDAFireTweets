@@ -37,9 +37,12 @@ warnings.filterwarnings("ignore",category=DeprecationWarning)
 
 from tkinter import *
 from tkinter.ttk import *
+from tkinter import filedialog
 
-def import_dataset():
-	tweets = pd.read_csv('pasil.csv', sep=';', encoding = 'ISO-8859-1')
+# filename = ""
+
+def import_dataset(csv_file):
+	tweets = pd.read_csv(csv_file, sep=';', encoding = 'ISO-8859-1')
 	print(tweets.head())
 	return tweets
 
@@ -186,6 +189,7 @@ def lda(data_lemmatized):
 			if (round(cv, 4) < temp):
 				ideal_num_topics = m
 				print(ideal_num_topics)
+				print(cv)
 				break
 			else:
 				temp = round(cv, 4)
@@ -284,20 +288,34 @@ def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, s
 
     return model_list, coherence_values
 
+def open_file():
+	filename = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+	tweets = import_dataset(filename)
+	data_lemmatized = preprocess(tweets)
+	lda(data_lemmatized)
+
 def main():
 	window = Tk()
-	window.configure(background='lightgray')
+	# window.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+	# print (window.filename)
+	window.configure(background='#DCDCDC')
 	window.resizable(False, False)
 	window.title("FireTalk Tweet Visualizer")
 	window.geometry('600x500')
 	photo = PhotoImage(file="fire2.png")
 	label = Label(window, image=photo)
-	tweets = import_dataset()
-	data_lemmatized = preprocess(tweets)
-	btn = Button(window, text="Visualize", command= lambda: lda(data_lemmatized))
+	# filename = askopenfilename(filetypes=(("Video files", "*.mp4;*.flv;*.avi;*.mkv"),
+ #                                       ("All files", "*.*") ))
+	
+
+	btn_browse = Button(window, text="Browse", command= lambda: open_file())
+	# tweets = import_dataset(filename)
+	# data_lemmatized = preprocess(tweets)
+	# btn_visualize = Button(window, text="Visualize", command= lambda: lda(data_lemmatized))
 
 	label.place(anchor=CENTER)
-	btn.place(relx=0.5, rely=0.5, anchor=CENTER)
+	btn_browse.place(relx=0.5, rely=0.5, anchor=CENTER)
+	# btn_visualize.place(relx=0.5, rely=0.5, anchor=CENTER)
 	window.mainloop()
 
 if __name__ == '__main__':
