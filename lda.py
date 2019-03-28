@@ -6,6 +6,8 @@ from pprint import pprint
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from collections import Counter
+from nltk.corpus import words
+word_list = words.words()
 
 # Gensim
 import gensim
@@ -130,6 +132,12 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
 def get_id2word(data_lemmatized):
 	return corpora.Dictionary(data_lemmatized)
 
+def word_exists(word):
+	if word in word_list:
+		return 1
+	else:
+		return 0
+
 def lda(data_lemmatized):
 	# Create Dictionary
 	id2word = corpora.Dictionary(data_lemmatized)
@@ -217,12 +225,24 @@ def lda(data_lemmatized):
 	counter = Counter(data_flat)
 
 	out = []
+	integritys = []   # integrity of topic
+	integrity = 0
 	for i, topic in topics:
 	    for word, weight in topic:
-	        out.append([word, i , weight, counter[word]])
+	    	integrity = integrity + (weight * word_exists(word))
+	    	out.append([word, i , weight, counter[word]])
+	    integritys.append(integrity)
 
+
+	print(integritys)
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])        
+	print(df)
 
+	# for i in range(len(topics)):
+	# 	prob_of_words = ldamodel.print_topic(i)
+	# 	for j in range(len(prob_of_words)):
+	# 		integrity = integrity + (prob_of_words[j] * word_exists()) 
+	# 	integritys.append(integrity)
 	# Plot Word Count and Weights of Topic Keywords
 	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
