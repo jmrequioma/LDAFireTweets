@@ -1,4 +1,5 @@
 import re
+import math
 import numpy as np
 import pandas as pd
 from pprint import pprint
@@ -170,9 +171,9 @@ def lda(data_lemmatized):
 	for topic in doc_lda:
 		# print(topic)
 		for topic_num, prob in topic[0]:
-			dists.append([topic_num, prob])
+			dists.append([topic_num, prob, math.log(prob), prob * math.log(prob)])
 
-	df_for_word_doc = pd.DataFrame(dists, columns=['topic_num', 'prob'])
+	df_for_word_doc = pd.DataFrame(dists, columns=['topic_num', 'prob', 'prob_log', 'prob * prob_log'])
 	print(df_for_word_doc)
 
 	# Compute Perplexity
@@ -241,15 +242,20 @@ def lda(data_lemmatized):
 	out = []
 	integritys = []   # integrity of topic
 	integrity = 0
+	test = 0
+	index = 0
 	for i, topic in topics:
 	    for word, weight in topic:
 	    	integrity = integrity + (weight * word_exists(word))
-	    	out.append([word, i , weight, counter[word]])
+	    	out.append([index, word, i , weight, test])
+	    	test = test + 100
+	    	index = index + 1
+
 	    integritys.append(integrity)
 
 
 	print(integritys)
-	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])        
+	df = pd.DataFrame(out, columns=['index', 'word', 'topic_id', 'importance', 'word_count'])        
 	print(df)
 
 	# for i in range(len(topics)):
@@ -261,15 +267,18 @@ def lda(data_lemmatized):
 	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	for i, ax in enumerate(axes.flatten()):
-	    ax.bar(x='word', height="word_count", data=df.loc[df.topic_id==i, :], color=cols[i], width=0.5, alpha=0.3, label='Word Count')
-	    ax_twin = ax.twinx()
-	    ax_twin.bar(x='word', height="importance", data=df.loc[df.topic_id==i, :], color=cols[i], width=0.2, label='Weights')
+	    ax.bar(x='word', height="word_count", data=df.loc[lambda df: df['topic_id'] == i], color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+	    
+	    # ax_twin = ax.twinx()
+	    # ax_twin.bar(x='word', height="importance", data=df.loc[df.topic_id==i, :], color=cols[i], width=0.2, label='Weights')
 	    ax.set_ylabel('Word Count', color=cols[i])
-	    ax_twin.set_ylim(0, 0.1); ax.set_ylim(0, 3500)
+	    # ax_twin.set_ylim(0, 0.1); ax.set_ylim(0, 3500)
 	    ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
 	    ax.tick_params(axis='y', left=False)
 	    ax.set_xticklabels(df.loc[df.topic_id==i, 'word'], rotation=30, horizontalalignment= 'right')
-	    ax.legend(loc='upper left'); ax_twin.legend(loc='upper right')
+	    ax.legend(loc='upper left')
+	    break
+	    # ax_twin.legend(loc='upper right')
 
 	fig.tight_layout(w_pad=2)    
 	fig.suptitle('Word Count and Importance of Topic Keywords')    
