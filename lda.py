@@ -160,7 +160,21 @@ def lda(data_lemmatized):
                                            per_word_topics=True)
 
 	pprint(lda_model.print_topics())
-	doc_lda = lda_model[corpus]
+	doc_lda = lda_model[corpus[0]]   # get topic probability distribution for a document
+	dists = []
+
+	# for topic in doc_lda:
+	# 	print(topic)
+
+	print(doc_lda[0])
+	# for i, topic in doc_lda:
+	# 	print(topic)
+	# 	for topic_num, prob in topic:
+	# 		dists.append([i, topic_num, prob])
+
+	# df_for_word_doc = pd.DataFrame(dists, columns=['iterator', 'topic_num', 'prob'])
+	# print(df_for_word_doc)
+
 	# Compute Perplexity
 	print('\nPerplexity: ', lda_model.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
 
