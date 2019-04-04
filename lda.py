@@ -162,19 +162,6 @@ def lda(data_lemmatized):
 
 	pprint(lda_model.print_topics())
 	doc_lda = lda_model[corpus]   # get topic probability distribution for a document
-	dists = []
-
-	# for topic in doc_lda:
-	# 	print(topic)
-
-	# print(doc_lda[1])
-	for topic in doc_lda:
-		# print(topic)
-		for topic_num, prob in topic[0]:
-			dists.append([topic_num, prob, math.log(prob), prob * math.log(prob)])
-
-	df_for_word_doc = pd.DataFrame(dists, columns=['topic_num', 'prob', 'prob_log', 'prob * prob_log'])
-	print(df_for_word_doc)
 
 	# Compute Perplexity
 	print('\nPerplexity: ', lda_model.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
@@ -238,47 +225,97 @@ def lda(data_lemmatized):
 	topics = lda_model.show_topics(formatted=False)
 	data_flat = [w for w_list in texts for w in w_list]
 	counter = Counter(data_flat)
+	doc_lda = lda_model[corpus]
 
 	out = []
 	integritys = []   # integrity of topic
+	dists = []
 	integrity = 0
-	test = 0
-	index = 0
 	for i, topic in topics:
 	    for word, weight in topic:
 	    	integrity = integrity + (weight * word_exists(word))
-	    	out.append([index, word, i , weight, test])
-	    	test = test + 100
-	    	index = index + 1
+	    	out.append([word, i , weight, counter[word]])
 
 	    integritys.append(integrity)
 
+	integrity_mean = np.mean(integritys)
+	integry_std = np.std(integritys)
 
-	print(integritys)
-	df = pd.DataFrame(out, columns=['index', 'word', 'topic_id', 'importance', 'word_count'])        
-	print(df)
+	# normalize integrity
+	normalized_integritys = []
+	normalized_integrity = 0
+	for i in range(len(integritys)):
+		normalized_integrity = (integritys[i] - integrity_mean) / integry_std
+		normalized_integritys.append(integrity)
 
-	# for i in range(len(topics)):
-	# 	prob_of_words = ldamodel.print_topic(i)
-	# 	for j in range(len(prob_of_words)):
-	# 		integrity = integrity + (prob_of_words[j] * word_exists()) 
-	# 	integritys.append(integrity)
+	print("normalized_integritys")
+	print(normalized_integritys)
+	for topic in doc_lda:
+		# print(topic)
+		for topic_num, prob in topic[0]:
+			dists.append([topic_num, prob, math.log10(prob), prob * math.log10(prob)])
+
+	df_for_word_doc = pd.DataFrame(dists, columns=['topic_num', 'prob', 'prob_log', 'mult_prob_log'])
+	print(df_for_word_doc)
+	sp_entropys = df_for_word_doc.groupby('topic_num').sum().mult_prob_log
+	sp_mean = df_for_word_doc.loc[:, "topic_num"].mean()
+	print(sp_mean)
+	negated_sp = (sp_entropys * -1).tolist()
+	sp_std = np.std(negated_sp)
+	print("negated_sp")
+	print(negated_sp)
+	print("sp_std")
+	print(sp_std)
+
+	# normalize spatial entropy
+	normalized_sp_entropys = []
+	normalized_sp_entropy = 0
+	for i in range(len(negated_sp)):
+		normalized_sp_entropy = (negated_sp[i] - sp_mean) / sp_std
+		normalized_sp_entropys.append(normalized_sp_entropy)
+
+	print("normalized_sp_entropys")
+	print(normalized_sp_entropys)
+	# calculate weights of topics
+	topic_weights = []
+	topic_weight = 0
+	for i in range(len(integritys)):
+		topic_weight = normalized_integritys[i] - normalized_sp_entropys[i]
+		topic_weights.append(topic_weight)
+
+	print("topic weights!!!!")
+	print(topic_weights)
+
+	# print(integritys)
+
+
+	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
+
 	# Plot Word Count and Weights of Topic Keywords
 	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
+	counter = 0
+	df_word_list = df["word"].tolist()
+	df_wordcount_list = df["word_count"].tolist()
+	df_wordweight_list = df["importance"].tolist()
+	start = 0
 	for i, ax in enumerate(axes.flatten()):
-	    ax.bar(x='word', height="word_count", data=df.loc[lambda df: df['topic_id'] == i], color=cols[i], width=0.5, alpha=0.3, label='Word Count')
-	    
-	    # ax_twin = ax.twinx()
-	    # ax_twin.bar(x='word', height="importance", data=df.loc[df.topic_id==i, :], color=cols[i], width=0.2, label='Weights')
-	    ax.set_ylabel('Word Count', color=cols[i])
-	    # ax_twin.set_ylim(0, 0.1); ax.set_ylim(0, 3500)
-	    ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
-	    ax.tick_params(axis='y', left=False)
-	    ax.set_xticklabels(df.loc[df.topic_id==i, 'word'], rotation=30, horizontalalignment= 'right')
-	    ax.legend(loc='upper left')
-	    break
-	    # ax_twin.legend(loc='upper right')
+		sliced_word_list = df_word_list[start:start + 10]
+		sliced_wordcount_list = df_wordcount_list[start:start + 10]
+		sliced_wordweight_list = df_wordweight_list[start:start + 10]
+
+		x1 = np.arange(10)
+		ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+		ax.set_ylabel('Word Count', color=cols[i])
+		ax_twin = ax.twinx()
+		ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
+		ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+		ax.tick_params(axis='y', left=False)
+		ax.set_xticks(np.arange(len(sliced_word_list)))
+		ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
+		ax.legend(loc='upper left')
+		ax_twin.legend(loc='upper right')
+		start = start + 10
 
 	fig.tight_layout(w_pad=2)    
 	fig.suptitle('Word Count and Importance of Topic Keywords')    
