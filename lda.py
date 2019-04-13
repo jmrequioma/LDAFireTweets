@@ -27,7 +27,7 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # import pyLDAvis.gensim
 # pyLDAvis.enable_notebook()
 import matplotlib
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")   # for mac
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -172,7 +172,7 @@ def lda(data_lemmatized):
 	print('\nCoherence Score: ', coherence_lda)
 
 
-	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=15, step=3)
+	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=1)
 
 	# mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
 	# ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
@@ -181,13 +181,13 @@ def lda(data_lemmatized):
 	# print('\nCoherence Score: ', coherence_ldamallet)
 
 	# Show graph
-	limit=1000; start=2; step=1;
+	limit=40; start=2; step=1;
 	x = range(start, limit, step)
-	# plt.plot(x, coherence_values)
-	# plt.xlabel("Num Topics")
-	# plt.ylabel("Coherence score")
-	# plt.legend(("coherence_values"), loc='best')
-	# plt.show()
+	plt.plot(x, coherence_values)
+	plt.xlabel("Num Topics")
+	plt.ylabel("Coherence score")
+	plt.legend(("coherence_values"), loc='best')
+	plt.show()
 	count = 0
 	temp = 0
 	# Print the coherence scores
@@ -209,12 +209,13 @@ def lda(data_lemmatized):
 	if (ideal_num_topics % 2 == 0):
 		half_of_topics = int(ideal_num_topics / 2)
 	else:
-		half_of_topics = int((ideal_num_topics - 1) / 2)
+		ideal_num_topics = ideal_num_topics - 1
+		half_of_topics = int((ideal_num_topics) / 2)
 
 	# feed the lda model with ideal number of topics 
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=ideal_num_topics, 
+                                           num_topics=8, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -292,7 +293,7 @@ def lda(data_lemmatized):
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
 
 	# Plot Word Count and Weights of Topic Keywords
-	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	fig, axes = plt.subplots(4, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	counter = 0
 	df_word_list = df["word"].tolist()
