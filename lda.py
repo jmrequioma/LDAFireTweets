@@ -215,7 +215,7 @@ def lda(data_lemmatized):
 	# feed the lda model with ideal number of topics 
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=8, 
+                                           num_topics=ideal_num_topics, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -293,7 +293,7 @@ def lda(data_lemmatized):
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
 
 	# Plot Word Count and Weights of Topic Keywords
-	fig, axes = plt.subplots(4, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	counter = 0
 	df_word_list = df["word"].tolist()
