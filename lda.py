@@ -27,7 +27,7 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # import pyLDAvis.gensim
 # pyLDAvis.enable_notebook()
 import matplotlib
-# matplotlib.use("TkAgg")   # for mac
+matplotlib.use("TkAgg")   # for mac
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -183,11 +183,12 @@ def lda(data_lemmatized):
 	# Show graph
 	limit=40; start=2; step=1;
 	x = range(start, limit, step)
-	plt.plot(x, coherence_values)
-	plt.xlabel("Num Topics")
-	plt.ylabel("Coherence score")
-	plt.legend(("coherence_values"), loc='best')
-	plt.show()
+	# plt.figure()
+	# plt.plot(x, coherence_values)
+	# plt.xlabel("Num Topics")
+	# plt.ylabel("Coherence score")
+	# plt.legend(("coherence_values"), loc='best')
+	# plt.show()
 	count = 0
 	temp = 0
 	# Print the coherence scores
@@ -228,6 +229,10 @@ def lda(data_lemmatized):
 	counter = Counter(data_flat)
 	doc_lda = lda_model[corpus]
 
+	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+	coherence_lda = coherence_model_lda.get_coherence()
+
+	print('\nActual Coherence Score: ', coherence_lda)
 	out = []
 	integritys = []   # integrity of topic
 	dists = []
@@ -259,9 +264,12 @@ def lda(data_lemmatized):
 	df_for_word_doc = pd.DataFrame(dists, columns=['topic_num', 'prob', 'prob_log', 'mult_prob_log'])
 	print(df_for_word_doc)
 	sp_entropys = df_for_word_doc.groupby('topic_num').sum().mult_prob_log
-	sp_mean = df_for_word_doc.loc[:, "topic_num"].mean()
-	print(sp_mean)
+	# sp_mean = df_for_word_doc.loc[:, "topic_num"].mean()
+	# print(sp_mean)
 	negated_sp = (sp_entropys * -1).tolist()
+	sp_mean = np.mean(negated_sp)
+	print("mean")
+	print(sp_mean)
 	sp_std = np.std(negated_sp)
 	print("negated_sp")
 	print(negated_sp)
