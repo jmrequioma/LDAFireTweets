@@ -183,12 +183,12 @@ def lda(data_lemmatized):
 	# Show graph
 	limit=40; start=2; step=1;
 	x = range(start, limit, step)
-	# plt.figure()
-	# plt.plot(x, coherence_values)
-	# plt.xlabel("Num Topics")
-	# plt.ylabel("Coherence score")
-	# plt.legend(("coherence_values"), loc='best')
-	# plt.show()
+	plt.figure()
+	plt.plot(x, coherence_values)
+	plt.xlabel("Num Topics")
+	plt.ylabel("Coherence score")
+	plt.legend(("coherence_values"), loc='best')
+	plt.show()
 	count = 0
 	temp = 0
 	# Print the coherence scores
@@ -301,34 +301,34 @@ def lda(data_lemmatized):
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
 
 	# Plot Word Count and Weights of Topic Keywords
-	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
-	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
-	counter = 0
-	df_word_list = df["word"].tolist()
-	df_wordcount_list = df["word_count"].tolist()
-	df_wordweight_list = df["importance"].tolist()
-	start = 0
-	for i, ax in enumerate(axes.flatten()):
-		sliced_word_list = df_word_list[start:start + 10]
-		sliced_wordcount_list = df_wordcount_list[start:start + 10]
-		sliced_wordweight_list = df_wordweight_list[start:start + 10]
+	# fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	# cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
+	# counter = 0
+	# df_word_list = df["word"].tolist()
+	# df_wordcount_list = df["word_count"].tolist()
+	# df_wordweight_list = df["importance"].tolist()
+	# start = 0
+	# for i, ax in enumerate(axes.flatten()):
+	# 	sliced_word_list = df_word_list[start:start + 10]
+	# 	sliced_wordcount_list = df_wordcount_list[start:start + 10]
+	# 	sliced_wordweight_list = df_wordweight_list[start:start + 10]
 
-		x1 = np.arange(10)
-		ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
-		ax.set_ylabel('Word Count', color=cols[i])
-		ax_twin = ax.twinx()
-		ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
-		ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
-		ax.tick_params(axis='y', left=False)
-		ax.set_xticks(np.arange(len(sliced_word_list)))
-		ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
-		ax.legend(loc='upper left')
-		ax_twin.legend(loc='upper right')
-		start = start + 10
+	# 	x1 = np.arange(10)
+	# 	ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+	# 	ax.set_ylabel('Word Count', color=cols[i])
+	# 	ax_twin = ax.twinx()
+	# 	ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
+	# 	ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+	# 	ax.tick_params(axis='y', left=False)
+	# 	ax.set_xticks(np.arange(len(sliced_word_list)))
+	# 	ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
+	# 	ax.legend(loc='upper left')
+	# 	ax_twin.legend(loc='upper right')
+	# 	start = start + 10
 
-	fig.tight_layout(w_pad=2)    
-	fig.suptitle('Word Count and Importance of Topic Keywords')    
-	plt.show()
+	# fig.tight_layout(w_pad=2)    
+	# fig.suptitle('Word Count and Importance of Topic Keywords')    
+	# plt.show()
 
 	# find for best coherence value score
 
