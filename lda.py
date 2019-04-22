@@ -23,6 +23,10 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # from spacy.lang.en import English
 # parser = English() 
 
+# textblob for spellchecking
+from textblob import TextBlob
+from textblob import Word
+
 # Plotting tools
 # import pyLDAvis
 # import pyLDAvis.gensim
@@ -44,7 +48,7 @@ from tkinter.ttk import *
 from tkinter import filedialog
 
 # filename = ""
-
+local_names = ['cebu', 'sitio']
 def import_dataset(csv_file):
 	tweets = pd.read_csv(csv_file, sep=';', encoding = 'ISO-8859-1')
 	print(tweets.head())
@@ -83,6 +87,21 @@ def preprocess(tweets):
 
 	# remove stopwords
 	data_words_nostops = remove_stopwords(data_words, stop_words)
+
+	# spellcheck
+	for data_word in data_words_nostops:
+		i = 0
+		for word in data_word:
+			w = Word(word)
+			list_of_spelled = w.spellcheck()   # list of tuples -> [(word, confidence), ...]
+			res = [lis[0] for lis in list_of_spelled]
+			spelled_word = res[0]
+			conf = [lis[1] for lis in list_of_spelled]
+			if (conf[0] > 0 and conf[0] < 0.7):
+				print(w.spellcheck())
+			else:
+				data_word[i] = spelled_word
+			i = i + 1
 
 	# form bigrams
 	data_words_bigrams = make_bigrams(data_words_nostops, bigram_mod)
@@ -218,7 +237,7 @@ def lda(data_lemmatized):
 	# feed the lda model with ideal number of topics 
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=34, 
+                                           num_topics=4, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -243,7 +262,6 @@ def lda(data_lemmatized):
 		integrity = 0
 		for word, weight in topic:
 			out.append([word, i , weight, counter[word]])
-		integritys.append(integrity)
 
 
 	print("data_flat!!")
@@ -318,7 +336,7 @@ def lda(data_lemmatized):
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
 
 	# Plot Word Count and Weights of Topic Keywords
-	fig, axes = plt.subplots(17, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	fig, axes = plt.subplots(2, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	counter = 0
 	df_word_list = df["word"].tolist()
