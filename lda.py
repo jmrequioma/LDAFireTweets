@@ -7,6 +7,7 @@ from pprint import pprint
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from collections import Counter
+from collections import defaultdict
 from nltk.corpus import words
 word_list = words.words()
 
@@ -27,7 +28,7 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # import pyLDAvis.gensim
 # pyLDAvis.enable_notebook()
 import matplotlib
-matplotlib.use("TkAgg")   # for mac
+# matplotlib.use("TkAgg")   # for mac
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -172,7 +173,7 @@ def lda(data_lemmatized):
 	print('\nCoherence Score: ', coherence_lda)
 
 
-	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=1)
+	# model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=15, step=1)
 
 	# mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
 	# ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
@@ -181,31 +182,32 @@ def lda(data_lemmatized):
 	# print('\nCoherence Score: ', coherence_ldamallet)
 
 	# Show graph
-	limit=40; start=2; step=1;
+	limit=15; start=2; step=1;
 	x = range(start, limit, step)
-	plt.figure()
-	plt.plot(x, coherence_values)
-	plt.xlabel("Num Topics")
-	plt.ylabel("Coherence score")
-	plt.legend(("coherence_values"), loc='best')
-	plt.show()
+	# plt.figure()
+	# plt.plot(x, coherence_values)
+	# plt.xlabel("Num Topics")
+	# plt.ylabel("Coherence score")
+	# plt.legend(("coherence_values"), loc='best')
+	# plt.show()
 	count = 0
 	temp = 0
 	# Print the coherence scores
-	for m, cv in zip(x, coherence_values):
-		if (count == 0):
-			temp = round(cv, 4)
-		else:
-			# count > 0
-			if (round(cv, 4) < temp):
-				ideal_num_topics = m
-				print(ideal_num_topics)
-				print(cv)
-				break
-			else:
-				temp = round(cv, 4)
-		count = count + 1
+	# for m, cv in zip(x, coherence_values):
+	# 	if (count == 0):
+	# 		temp = round(cv, 4)
+	# 	else:
+	# 		# count > 0
+	# 		if (round(cv, 4) < temp):
+	# 			ideal_num_topics = m
+	# 			print(ideal_num_topics)
+	# 			print(cv)
+	# 			break
+	# 		else:
+	# 			temp = round(cv, 4)
+	# 	count = count + 1
 
+	ideal_num_topics = 1
 	half_of_topics = 0
 	if (ideal_num_topics % 2 == 0):
 		half_of_topics = int(ideal_num_topics / 2)
@@ -216,7 +218,7 @@ def lda(data_lemmatized):
 	# feed the lda model with ideal number of topics 
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=ideal_num_topics, 
+                                           num_topics=34, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -238,11 +240,26 @@ def lda(data_lemmatized):
 	dists = []
 	integrity = 0
 	for i, topic in topics:
-	    for word, weight in topic:
-	    	integrity = integrity + (weight * word_exists(word))
-	    	out.append([word, i , weight, counter[word]])
+		integrity = 0
+		for word, weight in topic:
+			out.append([word, i , weight, counter[word]])
+		integritys.append(integrity)
 
-	    integritys.append(integrity)
+
+	print("data_flat!!")
+	print(data_flat)
+	topic_counter = 0
+	prob_of_word = 0
+	testDict = defaultdict(float)
+	for w in data_flat:
+		list_of_probs = lda_model.get_term_topics(w)
+		for topic_num, prob_value in list_of_probs:
+			testDict[topic_num] += prob_value
+		topic_counter = topic_counter + 1
+
+	print(sorted(testDict.items()))
+	integritys = [i[1] for i in sorted(testDict.items())]
+	print(integritys)
 
 	integrity_mean = np.mean(integritys)
 	integry_std = np.std(integritys)
@@ -252,7 +269,7 @@ def lda(data_lemmatized):
 	normalized_integrity = 0
 	for i in range(len(integritys)):
 		normalized_integrity = (integritys[i] - integrity_mean) / integry_std
-		normalized_integritys.append(integrity)
+		normalized_integritys.append(round(integrity, 4))
 
 	print("normalized_integritys")
 	print(normalized_integritys)
@@ -281,7 +298,7 @@ def lda(data_lemmatized):
 	normalized_sp_entropy = 0
 	for i in range(len(negated_sp)):
 		normalized_sp_entropy = (negated_sp[i] - sp_mean) / sp_std
-		normalized_sp_entropys.append(normalized_sp_entropy)
+		normalized_sp_entropys.append(round(normalized_sp_entropy, 4))
 
 	print("normalized_sp_entropys")
 	print(normalized_sp_entropys)
@@ -290,7 +307,7 @@ def lda(data_lemmatized):
 	topic_weight = 0
 	for i in range(len(integritys)):
 		topic_weight = normalized_integritys[i] - normalized_sp_entropys[i]
-		topic_weights.append(topic_weight)
+		topic_weights.append(round(topic_weight, 4))
 
 	print("topic weights!!!!")
 	print(topic_weights)
@@ -301,34 +318,34 @@ def lda(data_lemmatized):
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
 
 	# Plot Word Count and Weights of Topic Keywords
-	# fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
-	# cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
-	# counter = 0
-	# df_word_list = df["word"].tolist()
-	# df_wordcount_list = df["word_count"].tolist()
-	# df_wordweight_list = df["importance"].tolist()
-	# start = 0
-	# for i, ax in enumerate(axes.flatten()):
-	# 	sliced_word_list = df_word_list[start:start + 10]
-	# 	sliced_wordcount_list = df_wordcount_list[start:start + 10]
-	# 	sliced_wordweight_list = df_wordweight_list[start:start + 10]
+	fig, axes = plt.subplots(17, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
+	counter = 0
+	df_word_list = df["word"].tolist()
+	df_wordcount_list = df["word_count"].tolist()
+	df_wordweight_list = df["importance"].tolist()
+	start = 0
+	for i, ax in enumerate(axes.flatten()):
+		sliced_word_list = df_word_list[start:start + 10]
+		sliced_wordcount_list = df_wordcount_list[start:start + 10]
+		sliced_wordweight_list = df_wordweight_list[start:start + 10]
 
-	# 	x1 = np.arange(10)
-	# 	ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
-	# 	ax.set_ylabel('Word Count', color=cols[i])
-	# 	ax_twin = ax.twinx()
-	# 	ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
-	# 	ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
-	# 	ax.tick_params(axis='y', left=False)
-	# 	ax.set_xticks(np.arange(len(sliced_word_list)))
-	# 	ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
-	# 	ax.legend(loc='upper left')
-	# 	ax_twin.legend(loc='upper right')
-	# 	start = start + 10
+		x1 = np.arange(10)
+		ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+		ax.set_ylabel('Word Count', color=cols[i])
+		ax_twin = ax.twinx()
+		ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
+		ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+		ax.tick_params(axis='y', left=False)
+		ax.set_xticks(np.arange(len(sliced_word_list)))
+		ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
+		ax.legend(loc='upper left')
+		ax_twin.legend(loc='upper right')
+		start = start + 10
 
-	# fig.tight_layout(w_pad=2)    
-	# fig.suptitle('Word Count and Importance of Topic Keywords')    
-	# plt.show()
+	fig.tight_layout(w_pad=2)    
+	fig.suptitle('Word Count and Importance of Topic Keywords')    
+	plt.show()
 
 	# find for best coherence value score
 
