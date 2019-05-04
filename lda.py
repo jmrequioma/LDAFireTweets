@@ -97,7 +97,7 @@ def preprocess(tweets):
 			res = [lis[0] for lis in list_of_spelled]
 			spelled_word = res[0]
 			conf = [lis[1] for lis in list_of_spelled]
-			if (conf[0] > 0 and conf[0] < 0.7):
+			if (conf[0] > 0 and conf[0] < 0.8):
 				print(w.spellcheck())
 			else:
 				data_word[i] = spelled_word
@@ -192,7 +192,7 @@ def lda(data_lemmatized):
 	print('\nCoherence Score: ', coherence_lda)
 
 
-	# model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=15, step=1)
+	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=15, step=1)
 
 	# mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
 	# ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
@@ -203,41 +203,40 @@ def lda(data_lemmatized):
 	# Show graph
 	limit=15; start=2; step=1;
 	x = range(start, limit, step)
-	# plt.figure()
-	# plt.plot(x, coherence_values)
-	# plt.xlabel("Num Topics")
-	# plt.ylabel("Coherence score")
-	# plt.legend(("coherence_values"), loc='best')
+	plt.figure()
+	plt.plot(x, coherence_values)
+	plt.xlabel("Num Topics")
+	plt.ylabel("Coherence score")
+	plt.legend(("coherence_values"), loc='best')
 	# plt.show()
 	count = 0
 	temp = 0
 	# Print the coherence scores
-	# for m, cv in zip(x, coherence_values):
-	# 	if (count == 0):
-	# 		temp = round(cv, 4)
-	# 	else:
-	# 		# count > 0
-	# 		if (round(cv, 4) < temp):
-	# 			ideal_num_topics = m
-	# 			print(ideal_num_topics)
-	# 			print(cv)
-	# 			break
-	# 		else:
-	# 			temp = round(cv, 4)
-	# 	count = count + 1
+	for m, cv in zip(x, coherence_values):
+		if (count == 0):
+			temp = round(cv, 4)
+		else:
+			# count > 0
+			if (round(cv, 4) < temp):
+				ideal_num_topics = m - 1
+				print(ideal_num_topics)
+				print(temp)
+				break
+			else:
+				temp = round(cv, 4)
+		count = count + 1
 
-	ideal_num_topics = 1
-	half_of_topics = 0
-	if (ideal_num_topics % 2 == 0):
-		half_of_topics = int(ideal_num_topics / 2)
-	else:
-		ideal_num_topics = ideal_num_topics - 1
-		half_of_topics = int((ideal_num_topics) / 2)
+	half_of_topics = int(ideal_num_topics / 2)
+	# if (ideal_num_topics % 2 == 0):
+	# 	half_of_topics = int(ideal_num_topics / 2)
+	# else:
+	# 	ideal_num_topics = ideal_num_topics - 1
+	# 	half_of_topics = int((ideal_num_topics) / 2)
 
 	# feed the lda model with ideal number of topics 
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=4, 
+                                           num_topics=ideal_num_topics, 
                                            random_state=100,
                                            update_every=1,
                                            chunksize=100,
@@ -336,36 +335,68 @@ def lda(data_lemmatized):
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
 
 	# Plot Word Count and Weights of Topic Keywords
-	fig, axes = plt.subplots(2, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	if (ideal_num_topics % 2 == 0):
+		fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+	else:
+		fig, axes = plt.subplots(ideal_num_topics, 1, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	counter = 0
 	df_word_list = df["word"].tolist()
 	df_wordcount_list = df["word_count"].tolist()
 	df_wordweight_list = df["importance"].tolist()
 	start = 0
-	for i, ax in enumerate(axes.flatten()):
-		sliced_word_list = df_word_list[start:start + 10]
-		sliced_wordcount_list = df_wordcount_list[start:start + 10]
-		sliced_wordweight_list = df_wordweight_list[start:start + 10]
+	if (ideal_num_topics % 2 == 0):
+		for i, ax in enumerate(axes):
+			sliced_word_list = df_word_list[start:start + 10]
+			sliced_wordcount_list = df_wordcount_list[start:start + 10]
+			sliced_wordweight_list = df_wordweight_list[start:start + 10]
 
-		x1 = np.arange(10)
-		ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
-		ax.set_ylabel('Word Count', color=cols[i])
-		ax_twin = ax.twinx()
-		ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
-		ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
-		ax.tick_params(axis='y', left=False)
-		ax.set_xticks(np.arange(len(sliced_word_list)))
-		ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
-		ax.legend(loc='upper left')
-		ax_twin.legend(loc='upper right')
-		start = start + 10
+			x1 = np.arange(10)
+			ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+			ax.set_ylabel('Word Count', color=cols[i])
+			ax_twin = ax.twinx()
+			ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
+			ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+			ax.tick_params(axis='y', left=False)
+			ax.set_xticks(np.arange(len(sliced_word_list)))
+			ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
+			ax.legend(loc='upper left')
+			ax_twin.legend(loc='upper right')
+			start = start + 10
 
-	fig.tight_layout(w_pad=2)    
-	fig.suptitle('Word Count and Importance of Topic Keywords')    
-	plt.show()
+		fig.tight_layout(w_pad=2)    
+		fig.suptitle('Word Count and Importance of Topic Keywords')    
+		plt.show()
+	else:
+		for i in range(ideal_num_topics):
+			sliced_word_list = df_word_list[start:start + 10]
+			sliced_wordcount_list = df_wordcount_list[start:start + 10]
+			sliced_wordweight_list = df_wordweight_list[start:start + 10]
 
-	# find for best coherence value score
+			x1 = np.arange(10)
+			axes[i].bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+			axes[i].set_ylabel('Word Count', color=cols[i])
+			ax_twin = axes[i].twinx()
+			ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
+			axes[i].set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+			axes[i].tick_params(axis='y', left=False)
+			axes[i].set_xticks(np.arange(len(sliced_word_list)))
+			axes[i].set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
+			axes[i].legend(loc='upper left')
+			ax_twin.legend(loc='upper right')
+			start = start + 10
+
+		fig.tight_layout(w_pad=2)    
+		fig.suptitle('Word Count and Importance of Topic Keywords')    
+		plt.show()
+
+
+
+
+
+
+# find for best coherence value score
 
 def compute_coherence_values(model, dictionary, corpus, texts, limit, start=2, step=1):
     """
