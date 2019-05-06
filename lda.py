@@ -1,3 +1,4 @@
+import csv
 import re
 import math
 import numpy as np
@@ -32,7 +33,7 @@ from textblob import Word
 # import pyLDAvis.gensim
 # pyLDAvis.enable_notebook()
 import matplotlib
-# matplotlib.use("TkAgg")   # for mac
+matplotlib.use("TkAgg")   # for mac
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -329,6 +330,10 @@ def lda(data_lemmatized):
 	print("topic weights!!!!")
 	print(topic_weights)
 
+	with open('output_scores.csv', mode='w') as output_file:
+		output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+		output_writer.writerow(['Number of Topics', 'Topic Weights', 'Coherence Score'])
+		output_writer.writerow([len(topic_weights), topic_weights, coherence_lda])
 	# print(integritys)
 
 
