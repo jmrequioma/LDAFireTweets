@@ -193,7 +193,7 @@ def lda(data_lemmatized):
 	print('\nCoherence Score: ', coherence_lda)
 
 
-	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=15, step=1)
+	model_list, coherence_values = compute_coherence_values(lda_model, dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=20, step=1)
 
 	# mallet_path = '/Users/student/Downloads/mallet-2.0.8/bin/mallet'
 	# ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=8, id2word=id2word)
@@ -202,7 +202,7 @@ def lda(data_lemmatized):
 	# print('\nCoherence Score: ', coherence_ldamallet)
 
 	# Show graph
-	limit=15; start=2; step=1;
+	limit=20; start=2; step=1;
 	x = range(start, limit, step)
 	plt.figure()
 	plt.plot(x, coherence_values)
@@ -218,15 +218,15 @@ def lda(data_lemmatized):
 			temp = round(cv, 4)
 		else:
 			# count > 0
-			if (round(cv, 4) < temp):
-				ideal_num_topics = m - 1
+			if (round(cv, 4) > temp):
+				ideal_num_topics = m
 				print(ideal_num_topics)
-				print(temp)
-				break
-			else:
 				temp = round(cv, 4)
+				print(temp)
 		count = count + 1
 
+	print(ideal_num_topics)
+	ideal_num_topics = 12
 	half_of_topics = int(ideal_num_topics / 2)
 	# if (ideal_num_topics % 2 == 0):
 	# 	half_of_topics = int(ideal_num_topics / 2)
@@ -235,7 +235,7 @@ def lda(data_lemmatized):
 	# 	half_of_topics = int((ideal_num_topics) / 2)
 
 	# feed the lda model with ideal number of topics 
-	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+	real_lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
                                            num_topics=ideal_num_topics, 
                                            random_state=100,
@@ -245,12 +245,12 @@ def lda(data_lemmatized):
                                            alpha='auto',
                                            per_word_topics=True)
 
-	topics = lda_model.show_topics(formatted=False)
+	topics = real_lda_model.show_topics(num_topics = ideal_num_topics, formatted=False)
 	data_flat = [w for w_list in texts for w in w_list]
 	counter = Counter(data_flat)
-	doc_lda = lda_model[corpus]
+	doc_lda = real_lda_model[corpus]
 
-	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+	coherence_model_lda = CoherenceModel(model=real_lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
 	coherence_lda = coherence_model_lda.get_coherence()
 
 	print('\nActual Coherence Score: ', coherence_lda)
@@ -270,7 +270,7 @@ def lda(data_lemmatized):
 	prob_of_word = 0
 	testDict = defaultdict(float)
 	for w in data_flat:
-		list_of_probs = lda_model.get_term_topics(w)
+		list_of_probs = real_lda_model.get_term_topics(w)
 		for topic_num, prob_value in list_of_probs:
 			testDict[topic_num] += prob_value
 		topic_counter = topic_counter + 1
@@ -338,12 +338,13 @@ def lda(data_lemmatized):
 
 
 	df = pd.DataFrame(out, columns=['word', 'topic_id', 'importance', 'word_count'])
+	print(df)
 
 	# Plot Word Count and Weights of Topic Keywords
 	if (ideal_num_topics % 2 == 0):
 		fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 	else:
-		fig, axes = plt.subplots(ideal_num_topics, 1, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
+		fig, axes = plt.subplots(ideal_num_topics, 1, sharey=True, dpi=90, squeeze=True)
 
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	counter = 0
@@ -351,8 +352,9 @@ def lda(data_lemmatized):
 	df_wordcount_list = df["word_count"].tolist()
 	df_wordweight_list = df["importance"].tolist()
 	start = 0
+	print(df_word_list)
 	if (ideal_num_topics % 2 == 0):
-		for i, ax in enumerate(axes):
+		for i, ax in enumerate(axes.flatten()):
 			sliced_word_list = df_word_list[start:start + 10]
 			sliced_wordcount_list = df_wordcount_list[start:start + 10]
 			sliced_wordweight_list = df_wordweight_list[start:start + 10]
@@ -380,6 +382,8 @@ def lda(data_lemmatized):
 			sliced_wordweight_list = df_wordweight_list[start:start + 10]
 
 			x1 = np.arange(10)
+			print(i)
+			print(sliced_word_list)
 			axes[i].bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
 			axes[i].set_ylabel('Word Count', color=cols[i])
 			ax_twin = axes[i].twinx()
