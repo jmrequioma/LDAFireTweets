@@ -226,7 +226,6 @@ def lda(data_lemmatized):
 		count = count + 1
 
 	print(ideal_num_topics)
-	ideal_num_topics = 12
 	half_of_topics = int(ideal_num_topics / 2)
 	# if (ideal_num_topics % 2 == 0):
 	# 	half_of_topics = int(ideal_num_topics / 2)
@@ -245,7 +244,7 @@ def lda(data_lemmatized):
                                            alpha='auto',
                                            per_word_topics=True)
 
-	topics = real_lda_model.show_topics(num_topics = ideal_num_topics, formatted=False)
+	topics = real_lda_model.show_topics(num_topics = ideal_num_topics - 1, formatted=False)
 	data_flat = [w for w_list in texts for w in w_list]
 	counter = Counter(data_flat)
 	doc_lda = real_lda_model[corpus]
