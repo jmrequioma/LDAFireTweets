@@ -244,7 +244,7 @@ def lda(data_lemmatized):
                                            alpha='auto',
                                            per_word_topics=True)
 
-	topics = real_lda_model.show_topics(num_topics = ideal_num_topics - 1, formatted=False)
+	topics = real_lda_model.show_topics(num_topics = ideal_num_topics, formatted=False)
 	data_flat = [w for w_list in texts for w in w_list]
 	counter = Counter(data_flat)
 	doc_lda = real_lda_model[corpus]
@@ -340,10 +340,8 @@ def lda(data_lemmatized):
 	print(df)
 
 	# Plot Word Count and Weights of Topic Keywords
-	if (ideal_num_topics % 2 == 0):
-		fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
-	else:
-		fig, axes = plt.subplots(ideal_num_topics, 1, sharey=True, dpi=90, squeeze=True)
+	# plt.figure()
+	fig, axes = plt.subplots(half_of_topics, 2, figsize=(10,10), sharey=True, dpi=90, squeeze=True)
 
 	cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
 	counter = 0
@@ -354,9 +352,13 @@ def lda(data_lemmatized):
 	print(df_word_list)
 	if (ideal_num_topics % 2 == 0):
 		for i, ax in enumerate(axes.flatten()):
+			color_iter = i
 			sliced_word_list = df_word_list[start:start + 10]
 			sliced_wordcount_list = df_wordcount_list[start:start + 10]
 			sliced_wordweight_list = df_wordweight_list[start:start + 10]
+
+			if (color_iter == 10):
+				color_iter = 0
 
 			x1 = np.arange(10)
 			ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
@@ -370,30 +372,53 @@ def lda(data_lemmatized):
 			ax.legend(loc='upper left')
 			ax_twin.legend(loc='upper right')
 			start = start + 10
+			color_iter = color_iter + 1
 
 		fig.tight_layout(w_pad=2)    
-		fig.suptitle('Word Count and Importance of Topic Keywords')    
+		fig.suptitle('Word Count and Importance of Topic Keywords')
 		plt.show()
 	else:
-		for i in range(ideal_num_topics):
+		for i, ax in enumerate(axes.flatten()):
+			color_iter = i
 			sliced_word_list = df_word_list[start:start + 10]
 			sliced_wordcount_list = df_wordcount_list[start:start + 10]
 			sliced_wordweight_list = df_wordweight_list[start:start + 10]
 
+			if (color_iter == 10):
+				color_iter = 0
+
 			x1 = np.arange(10)
-			print(i)
-			print(sliced_word_list)
-			axes[i].bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
-			axes[i].set_ylabel('Word Count', color=cols[i])
-			ax_twin = axes[i].twinx()
+			ax.bar(x=x1, height=sliced_wordcount_list, color=cols[i], width=0.5, alpha=0.3, label='Word Count')
+			ax.set_ylabel('Word Count', color=cols[i])
+			ax_twin = ax.twinx()
 			ax_twin.bar(x=x1, height=sliced_wordweight_list, color=cols[i], width=0.2, label='Weights')
-			axes[i].set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
-			axes[i].tick_params(axis='y', left=False)
-			axes[i].set_xticks(np.arange(len(sliced_word_list)))
-			axes[i].set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
-			axes[i].legend(loc='upper left')
+			ax.set_title('Topic: ' + str(i), color=cols[i], fontsize=16)
+			ax.tick_params(axis='y', left=False)
+			ax.set_xticks(np.arange(len(sliced_word_list)))
+			ax.set_xticklabels(sliced_word_list, rotation=30, horizontalalignment= 'right')
+			ax.legend(loc='upper left')
 			ax_twin.legend(loc='upper right')
 			start = start + 10
+			color_iter = color_iter + 1
+
+		fig.tight_layout(w_pad=2)    
+		fig.suptitle('Word Count and Importance of Topic Keywords')    
+		plt.show()
+		# plt.figure()
+		fig, axes = plt.subplots(1, 1, sharey=True, dpi=90, squeeze=True)
+
+		x1 = np.arange(10)
+		axes.bar(x=x1, height=df_wordcount_list[start:start+10], color=cols[0], width=0.5, alpha=0.3, label='Word Count')
+		axes.set_ylabel('Word Count', color=cols[0])
+		ax_twin = axes.twinx()
+		ax_twin.bar(x=x1, height=df_wordweight_list[start:start+10], color=cols[0], width=0.2, label='Weights')
+		axes.set_title('Topic: ' + str(len(topics)), color=cols[0], fontsize=16)
+		axes.tick_params(axis='y', left=False)
+		axes.set_xticks(np.arange(len(df_word_list[start:start+10])))
+		axes.set_xticklabels(df_word_list[start:start+10], rotation=30, horizontalalignment= 'right')
+		axes.legend(loc='upper left')
+		ax_twin.legend(loc='upper right')
+		# start = start + 10
 
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Word Count and Importance of Topic Keywords')    
