@@ -102,11 +102,21 @@ class StartPage(tk.Frame):
 
 	def open_file(self, controller):
 		filename = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
-		t1 = threading.Thread(target=logic, args=(filename, ))
+		t1 = threading.Thread(target=self.logic, args=(filename, controller, ))
 		t1.start()
 		controller.show_frame(LoadingPage)
 		# LoadingPage.update_progressbar()
 		# lda(data_lemmatized)
+
+	def logic(self, filename, controller):
+		try:
+			tweets = import_dataset(filename)
+			data_lemmatized = preprocess(tweets)
+			lda(data_lemmatized)
+		except Exception as e:
+			# raise e
+			print("error")
+			controller.show_frame(StartPage)
 
 		
 
