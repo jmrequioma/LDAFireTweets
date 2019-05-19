@@ -58,7 +58,7 @@ from tkinter import filedialog
 
 LARGE_FONT = ("Verdana", 12)
 # COHERENCE_VALUES = []
-# FILENAME = ""
+FILENAME = ""
 class App(tk.Tk):
 
 	def __init__(self, *args, **kwargs):
@@ -88,7 +88,7 @@ class App(tk.Tk):
 		frame.tkraise()
 
 class StartPage(tk.Frame):
-
+	file = 'this is file'
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
 		photo = PhotoImage(file="fire2.png")
@@ -101,9 +101,11 @@ class StartPage(tk.Frame):
 		
 
 	def open_file(self, controller):
-		filename = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
-		t1 = threading.Thread(target=self.logic, args=(filename, controller, ))
-		t1.start()
+		global FILENAME
+		FILENAME = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+		# setattr(self, 'file', file)
+		# t1 = threading.Thread(target=self.logic, args=(filename, controller, ))
+		# t1.start()
 		controller.show_frame(LoadingPage)
 		# LoadingPage.update_progressbar()
 		# lda(data_lemmatized)
@@ -138,7 +140,22 @@ class LoadingPage(tk.Frame):
 		self.test_button.place(x=260, y=270)
 		self.home_button.pack(side=BOTTOM)
 
+	def logic(self, controller):
+		try:
+			# print(StartPage.file)
+			print(FILENAME)
+			tweets = import_dataset(FILENAME)
+			data_lemmatized = preprocess(tweets)
+			lda(data_lemmatized)
+		except Exception as e:
+			print(FILENAME)
+			raise e
+			print("error")
+			controller.show_frame(StartPage)
+
 	def holder(self, controller):
+		t1 = threading.Thread(target=self.logic, args=(controller, ))
+		t1.start()
 		t2 = threading.Thread(target=self.update_progressbar, args=(controller, ))
 		t2.start()
 		self.test_button.config(state=DISABLED)
