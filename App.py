@@ -468,8 +468,10 @@ def lda(data_lemmatized):
 	normalized_integrity = 0
 	for i in range(len(integritys)):
 		normalized_integrity = (integritys[i] - integrity_mean) / integry_std
-		normalized_integritys.append(round(integrity, 4))
-
+		normalized_integritys.append(round(normalized_integrity, 4))
+	print("integrity mean: ")
+	print(integrity_mean)
+	print(integry_std)
 	print("normalized_integritys")
 	print(normalized_integritys)
 	for topic in doc_lda:
@@ -518,8 +520,8 @@ def lda(data_lemmatized):
 
 	with open('output_scores.csv', mode='w') as output_file:
 		output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		output_writer.writerow(['Number of Topics', 'Topic Weights', 'Coherence Score'])
-		output_writer.writerow([len(topic_weights), topic_weights, coherence_lda])
+		output_writer.writerow(['Number of Topics', 'Integritys', 'Spatial Entropy', 'Topic Weights', 'Coherence Score'])
+		output_writer.writerow([len(topic_weights), normalized_integritys, normalized_sp_entropys, topic_weights, coherence_lda])
 	# print(integritys)
 
 
