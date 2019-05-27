@@ -14,6 +14,7 @@ word_list = words.words()
 import threading
 import queue
 import time
+from time import gmtime, strftime
 from tkinter.ttk import Progressbar
 
 # Gensim
@@ -37,7 +38,8 @@ from textblob import Word
 # import pyLDAvis.gensim
 # pyLDAvis.enable_notebook()
 import matplotlib
-matplotlib.use("TkAgg")   # for mac
+# matplotlib.use("TkAgg")   # for mac
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.figure import Figure
@@ -368,12 +370,14 @@ def lda(data_lemmatized):
 	# Show graph
 	limit=15; start=2; step=1;
 	x = range(start, limit, step)
-	plt.figure()
+	fig = plt.figure()
 	plt.plot(x, coherence_values)
 	plt.xlabel("Num Topics")
 	plt.ylabel("Coherence score")
 	plt.legend(("coherence_values"), loc='best')
 	# plt.show()
+	# current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+	plt.savefig('graphs/TC.png')
 	count = 0
 	temp = 0
 	ideal_num_topics = 0
@@ -567,7 +571,9 @@ def lda(data_lemmatized):
 
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Topic Weights: ' + str(topic_weights), fontsize='10')
-		plt.show()
+		# plt.show()
+		# current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+		plt.savefig('graphs/T0.png')
 	else:
 		for i, ax in enumerate(axes.flatten()):
 			sliced_word_list = df_word_list[start:start + 10]
@@ -594,6 +600,8 @@ def lda(data_lemmatized):
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Topic Weights: ' + str(topic_weights), fontsize=10)    
 		# plt.show()
+		current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+		plt.savefig('graphs/T1.png')
 		# plt.figure()
 		fig, axes = plt.subplots(1, 1, sharey=True, dpi=90, squeeze=True)
 
@@ -612,7 +620,9 @@ def lda(data_lemmatized):
 
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Cont.', fontsize='10')    
-		plt.show()
+		# plt.show()
+		# current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+		plt.savefig('graphs/T2.png')
 
 
 
