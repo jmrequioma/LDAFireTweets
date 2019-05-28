@@ -61,7 +61,12 @@ from tkinter.ttk import *
 from tkinter import filedialog
 
 LARGE_FONT = ("Verdana", 12)
-# COHERENCE_VALUES = []
+
+# DISP_INTEGRITYS = []
+# DISP_SP_ENTROPYS = []
+# DISP_TOPIC_WEIGHTS = []
+# DISP_TC_SCORE = 0
+
 FILENAME = ""
 class App(tk.Tk):
 
@@ -79,7 +84,7 @@ class App(tk.Tk):
 
 		self.frames = {}
 
-		for F in (StartPage, LoadingPage, CoherencePage, TopicPage):
+		for F in (StartPage, LoadingPage, MetricsPage, TopicPage):
 			frame = F(container, self)
 			self.frames[F] = frame
 			frame.grid(row=0, column=0, sticky="nsew")
@@ -107,33 +112,16 @@ class StartPage(tk.Frame):
 	def open_file(self, controller):
 		global FILENAME
 		FILENAME = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
-		# setattr(self, 'file', file)
-		# t1 = threading.Thread(target=self.logic, args=(filename, controller, ))
-		# t1.start()
 		controller.show_frame(LoadingPage)
-		# LoadingPage.update_progressbar()
-		# lda(data_lemmatized)
-
-	def logic(self, filename, controller):
-		try:
-			tweets = import_dataset(filename)
-			data_lemmatized = preprocess(tweets)
-			lda(data_lemmatized)
-		except Exception as e:
-			# raise e
-			print("error")
-			controller.show_frame(StartPage)
 
 		
-
 class LoadingPage(tk.Frame):
-
 
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
 		self.label = Label(self, text="")
 		self.test_button = Button(self, text="Run", command=lambda: self.holder(controller))
-		self.home_button = Button(self, text="Back to Home", command=lambda: [controller.show_frame(StartPage), self.reset(controller)])
+		self.home_button = Button(self, text="Go to Metrics", command=lambda: [controller.show_frame(MetricsPage), self.reset(controller)])
 		self.barVar = tk.DoubleVar()
 		self.barVar.set(0)
 		self.bar = Progressbar(self, length=400, variable=self.barVar)
@@ -197,16 +185,45 @@ class LoadingPage(tk.Frame):
 		self.test_button.config(state=NORMAL)
 
 
-
-
-class CoherencePage(tk.Frame):
+class MetricsPage(tk.Frame):
 
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
 		home_button = Button(self, text="Back to Home", command=lambda: controller.show_frame(StartPage))
+		metrics_button = Button(self, text="Get Metrics", command=lambda: self.get_metrics(controller))
+		integrity_lbl = Label(self, text="Integrity Scores")
+		self.integrity_val = Label(self, text="")
+		sp_lbl = Label(self, text="Spatial Entropy Scores")
+		self.sp_val = Label(self, text="")
+		tw_lbl = Label(self, text="Topic Weights")
+		self.tw_val = Label(self, text="")
+		tc_lbl = Label(self, text="Topic Coherence Score")
+		self.tc_val = Label(self, text="")
 
+
+		integrity_lbl.place(x=100, y=100)
+		self.integrity_val.place(x=100, y=120)
+		sp_lbl.place(x=100, y=140)
+		self.sp_val.place(x=100, y=160)
+		tw_lbl.place(x=100, y=180)
+		self.tw_val.place(x=100, y=200)
+		tc_lbl.place(x=100, y=220)
+		self.tc_val.place(x=100, y=240)
+		metrics_button.place(x=260, y=300)
 		home_button.pack(side=BOTTOM)
 
+	def get_metrics(self, controller):
+		results = pd.read_csv('output_scores.csv', sep=',', skip_blank_lines=True, encoding = 'ISO-8859-1')
+		results_arrs = results.values.tolist()
+		data_row = results_arrs[0]
+		disp_integritys = data_row[1]
+		disp_sp_entropys = data_row[2]
+		disp_tw = data_row[3]
+		disp_tc = data_row[4]
+		self.integrity_val['text'] = str(disp_integritys)
+		self.sp_val['text'] = str(disp_sp_entropys)
+		self.tw_val['text'] = str(disp_tw)
+		self.tc_val['text'] = str(disp_tc)
 
 
 class TopicPage(tk.Frame):
@@ -215,7 +232,7 @@ class TopicPage(tk.Frame):
 		tk.Frame.__init__(self, parent)
 		label = Label(self, text="Loading...")
 		home_button = Button(self, text="Back to Home", command=lambda: controller.show_frame(StartPage))
-		coherence_button = Button(self, text="Back to Coherence", command=lambda: controller.show_frame(CoherencePage))
+		coherence_button = Button(self, text="Back to Coherence", command=lambda: controller.show_frame(MetricsPage))
 
 		label.place(relx=0.5, rely=0.5, anchor=CENTER)
 		home_button.pack(side=BOTTOM)
@@ -438,6 +455,7 @@ def lda(data_lemmatized):
 	coherence_lda = coherence_model_lda.get_coherence()
 
 	print('\nActual Coherence Score: ', coherence_lda)
+	DISP_TC_SCORE = coherence_lda
 	out = []
 	integritys = []   # integrity of topic
 	dists = []
@@ -480,6 +498,7 @@ def lda(data_lemmatized):
 	print(integry_std)
 	print("normalized_integritys")
 	print(normalized_integritys)
+	DISP_INTEGRITYS = normalized_integritys
 	for topic in doc_lda:
 		# print(topic)
 		for topic_num, prob in topic[0]:
@@ -509,6 +528,7 @@ def lda(data_lemmatized):
 
 	print("normalized_sp_entropys")
 	print(normalized_sp_entropys)
+	DISP_SP_ENTROPYS = normalized_sp_entropys
 	# check length
 	if (len(normalized_sp_entropys) < ideal_num_topics):
 		for i in range(ideal_num_topics - len(normalized_sp_entropys)):
@@ -523,11 +543,12 @@ def lda(data_lemmatized):
 
 	print("topic weights!!!!")
 	print(topic_weights)
+	DISP_TOPIC_WEIGHTS = topic_weights
 
 	with open('output_scores.csv', mode='w') as output_file:
 		output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 		output_writer.writerow(['Number of Topics', 'Integritys', 'Spatial Entropy', 'Topic Weights', 'Coherence Score'])
-		output_writer.writerow([len(topic_weights), normalized_integritys, normalized_sp_entropys, topic_weights, coherence_lda])
+		output_writer.writerow([len(topic_weights), normalized_integritys, normalized_sp_entropys, topic_weights, round(coherence_lda, 4)])
 	# print(integritys)
 
 
