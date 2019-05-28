@@ -14,6 +14,8 @@ word_list = words.words()
 import threading
 import queue
 import time
+import uuid
+import uuid
 from time import gmtime, strftime
 from tkinter.ttk import Progressbar
 
@@ -376,8 +378,8 @@ def lda(data_lemmatized):
 	plt.ylabel("Coherence score")
 	plt.legend(("coherence_values"), loc='best')
 	# plt.show()
-	# current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-	plt.savefig('graphs/TC.png')
+	unique_filename = str(uuid.uuid4())
+	plt.savefig('graphs/TC'+ unique_filename+ '.png')
 	count = 0
 	temp = 0
 	ideal_num_topics = 0
@@ -572,8 +574,8 @@ def lda(data_lemmatized):
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Topic Weights: ' + str(topic_weights), fontsize='10')
 		# plt.show()
-		# current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-		plt.savefig('graphs/T0.png')
+		unique_filename = str(uuid.uuid4())
+		plt.savefig('graphs/T0'+unique_filename+'.png')
 	else:
 		for i, ax in enumerate(axes.flatten()):
 			sliced_word_list = df_word_list[start:start + 10]
@@ -600,8 +602,8 @@ def lda(data_lemmatized):
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Topic Weights: ' + str(topic_weights), fontsize=10)    
 		# plt.show()
-		current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-		plt.savefig('graphs/T1.png')
+		unique_filename = str(uuid.uuid4())
+		plt.savefig('graphs/T1'+unique_filename+'.png')
 		# plt.figure()
 		fig, axes = plt.subplots(1, 1, sharey=True, dpi=90, squeeze=True)
 
@@ -621,8 +623,8 @@ def lda(data_lemmatized):
 		fig.tight_layout(w_pad=2)    
 		fig.suptitle('Cont.', fontsize='10')    
 		# plt.show()
-		# current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-		plt.savefig('graphs/T2.png')
+		unique_filename = str(uuid.uuid4())
+		plt.savefig('graphs/T2'+unique_filename+'.png')
 
 
 
